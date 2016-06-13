@@ -10,22 +10,6 @@ var ERROR_PHRASE_LIST = [
 	"Well this is embarrassing"
 ];
 
-var FinishedDate = "0000-00-00 14:00:00";
-
-var confirmOnPageExit = function(e) 
-{
-	e = e || window.event;
-
-	var message = "It is not recommended that you leave the page at this time";
-	
-	if (e)
-	{
-		e.returnValue = message;
-	}
-	
-	return message;
-};
-
 function ShowError(errorMessage) {
 	var errorPhraseNum = Math.floor(Math.random() * 7);
 
@@ -34,18 +18,18 @@ function ShowError(errorMessage) {
 	});
 };
 
-function transitionPage(oldPage, newPage) {
+function TransitionPage(oldPage, newPage) {
 	$(oldPage).toggle("slide", {direction: "left"}, SLIDE_TIME);
 	$(newPage).toggle("slide", {direction: "right"}, SLIDE_TIME);
 }
 
 $(function() {
-	window.onerror = function(errorMessage, url, lineNumber) {
-		ShowError(errorMessage.split(": ").pop());
-	}
-	
 	if(window.Notification && Notification.permission !== "denied") {
 		Notification.requestPermission();
+	}
+	
+	window.onerror = function(errorMessage, url, lineNumber) {
+		ShowError(errorMessage.split(": ").pop());
 	}
 	
 	$("#print-countdown").TimeCircles({
@@ -59,76 +43,63 @@ $(function() {
 		use_background: false
 	});
 	
-	if (FinishedDate != "0000-00-00 00:00:00") {
-		$("#print-countdown").attr("data-timer", FinishedDate);
-		
-		$("#print-page").show();
-	}
-	
-	else {
+	if ($("#print-countdown").attr("data-timer") == "None") {
 		$("#start-page").show();
 	}
 	
+	else {		
+		$("#print-page").show();
+	}
+	
 	$("#upload-button-file").change(function(event) {
-		window.onbeforeunload = confirmOnPageExit;
-		
-		var data = new FormData();
-		
-		data.append('file', this.files[0]);
-		
-		$("#settings-button").hide();
-		$("#upload-button").hide();
-		
-		$("#upload-progress-bar").show();
+		$("#upload-form").submit();
+	});
+	
 
-		$.ajax({
-			xhr: function() {
-				var xhr = new window.XMLHttpRequest();
-
-				xhr.addEventListener("progress", function(evt) {
-					if (evt.lengthComputable) {
-						var percentComplete = evt.loaded / evt.total;
+	$("form").ajaxForm({
+		beforeSend: function() {
+			var percentVal = '0%';
+			
+			$('#upload-progress-bar-fill').width(percentVal);
+			
+			$("#settings-button").hide();
+			$("#upload-button").hide();
 		
-						$("#upload-progress-bar-fill").width(percent + "%");
-					}
-				}, false);
-
-				return xhr;
-			},
-			type: 'POST',
-			url: "/upload/",
-			data: data,
-			contentType: false,
-			processData: false,
-			success: function(data) {
-				var notification = new Notification('Lava Printer', { 
-					body: 'Print file finished uploading'
-				});
-				
-				$("#upload-progress-bar").hide();
-				
-				$("#print-button").show();
-			}
-		}, 'json');
-
-		event.preventDefault();
+			$("#upload-progress-bar").show();
+		},
+		uploadProgress: function(event, position, total, percentComplete) {
+			var percentVal = percentComplete + '%';
+			
+			$('#upload-progress-bar-fill').width(percentVal);
+		},
+		complete: function(response) {
+			var notification = new Notification("Lava Printer", { 
+				body: "Print file finished uploading"
+			});
+			
+			$("#upload-progress-bar").hide();
+			
+			$("#print-button").show();
+		}
 	});
 	
 	/*FinishedPrintingAccordingToServer() {
-		FinishedDate = Null;
+		FinishedDate = null;
 		
 		var notification = new Notification('Lava Printer', { 
 			body: 'Print finished!'
 		});
 		
 		transitionPage('#print-page', '#finished-page');
-	}*/
+	}
+	
+	*/
 	
 	$("#print-button").click(function() {
-		transitionPage('#start-page', '#print-page');
+		TransitionPage('#start-page', '#print-page');
 	});
 	
 	$("#restart-button").click(function() {
-		transitionPage('#finished-page', '#start-page');
+		 location.reload(true);
 	});
 });

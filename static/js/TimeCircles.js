@@ -802,7 +802,7 @@
         ref_date: new Date(),
         start: true,
         animation: "smooth",
-        count_past_zero: true,
+        count_past_zero: false,
         circle_bg_color: "#60686F",
         use_background: true,
         fg_width: 0.1,

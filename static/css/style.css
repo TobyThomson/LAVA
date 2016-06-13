@@ -38,13 +38,7 @@ html, body {
 	position: absolute;
 	
 	text-align: center;
-}
 
-#start-page {
-	display:inline-block;
-}
-
-#print-page, #finished-page {
 	display: none;
 	
 	float:left;
