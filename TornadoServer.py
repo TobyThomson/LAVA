@@ -9,15 +9,53 @@ import uuid
 
 PrintFinishedDate = None
 
+#Command IDs
+BEGIN_PRINT_COMMAND = "PRINT"
+
+#Response IDs
+PRINT_BEGUN_RESPONSE = "BEGUN._TIME_REMANING";
+PRINT_FINISHED_RESPONSE = "FINISHED";
+PRINT_ERROR_RESPONSE = "ERROR";
+
+def GetPrintSecondsRemaning ():
+	global PrintFinishedDate
+	
+	printSecondsRemaning = None	
+	
+	if(PrintFinishedDate):
+		printSecondsRemaning = (PrintFinishedDate - datetime.datetime.now()).total_seconds()
+	
+	return printSecondsRemaning
+
+def SetPrintFinishedDate (estimatedPrintSeconds):
+	global PrintFinishedDate
+	
+	PrintFinishedDate = (datetime.datetime.now() + datetime.timedelta(seconds = estimatedPrintSeconds))
+
+class MainHandler (tornado.web.RequestHandler):
+    def get(self):
+        self.render("index.html", printSecondsRemaining = GetPrintSecondsRemaning())
+
+class WebSocketHandler (tornado.websocket.WebSocketHandler):
+    def open(self):
+        print("***** WEBSOCKET OPENED *****")
+
+    def on_message(self, message):
+        if (message == BEGIN_PRINT_COMMAND):
+        	printSecondsRemaningString = str(GetPrintSecondsRemaning())
+        	
+        	self.write_message(PRINT_BEGUN_RESPONSE + ":" + printSecondsRemaningString)
+
+    def on_close(self):
+        print("***** WEBSOCKET CLOSED *****")
+
 class UploadHandler (tornado.web.RequestHandler):
 	def post(self):
-		global PrintFinishedDate
-
 		print('PRINT FILE RECIEVED\n')
 
-		PrintFinishedDate = (datetime.datetime.now() + datetime.timedelta(seconds=30000))
+		SetPrintFinishedDate(30000)
 
-		print(PrintFinishedDate)
+		print(GetPrintSecondsRemaning())
 
 		fileinfo = self.request.files['print-file'][0]
 		fname = fileinfo['filename']
@@ -27,24 +65,11 @@ class UploadHandler (tornado.web.RequestHandler):
 		f = open('uploads/' + cname, 'w+')
 
 		f.write(fileinfo['body'])
-		
-class MainHandler (tornado.web.RequestHandler):
-    def get(self):
-    	global PrintFinishedDate
-    	
-    	seconds = 0
-    	
-    	try:
-    		seconds = (PrintFinishedDate - datetime.datetime.now()).total_seconds()
-    	
-    	except:
-    		seconds = None
-    	
-        self.render("index.html", printFinishedSeconds = seconds)
 
 application = tornado.web.Application([
 	(r'/', MainHandler),
-	(r'/upload/', UploadHandler) ],
+	(r'/websocket', WebSocketHandler),
+	(r'/upload', UploadHandler) ],
     
     template_path=os.path.join(os.path.dirname(__file__), "templates"),
     static_path=os.path.join(os.path.dirname(__file__), "static"),
@@ -55,6 +80,3 @@ if __name__ == "__main__":
 	http_server = tornado.httpserver.HTTPServer(application)
 	http_server.listen(8888)
 	tornado.ioloop.IOLoop.instance().start()
-
-
-

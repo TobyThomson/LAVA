@@ -22,6 +22,18 @@
 	
 	<body>
 		<div class="page-container">
+			<div class="page" id="websockets-error-page">
+				<div class="vertical-center">
+					<div class="container-fluid">
+						<div class="row">
+							<div class="col-xs-12">
+								<p>Oh no, you need a browser that supports WebSockets!</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
 			<div class="page" id="start-page">
 				<div class="vertical-center">
 					<div class="container-fluid">
@@ -33,7 +45,7 @@
 
 						<div class="row">
 							<div class="col-xs-12">
-								<form id="upload-form" action="/upload/" method="post" enctype="multipart/form-data">
+								<form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
 									<span class="btn btn-warning wide-element" id="upload-button">
 										Upload file
 
@@ -61,7 +73,7 @@
 					<div class="container-fluid">
 						<div class="row">
 							<div class="col-xs-12">
-								<div class="wide-element" id="print-countdown" data-timer="{{ printFinishedSeconds }}"></div>
+								<div class="wide-element" id="print-countdown" data-timer="{{ printSecondsRemaining }}"></div>
 							</div>
 						</div>
 					</div>
