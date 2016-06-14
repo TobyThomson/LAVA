@@ -6,6 +6,7 @@ import tornado.websocket
 import os
 import datetime
 import uuid
+import math
 
 PrintFinishedDate = None
 
@@ -23,7 +24,7 @@ def GetPrintSecondsRemaning ():
 	printSecondsRemaning = None	
 	
 	if(PrintFinishedDate):
-		printSecondsRemaning = (PrintFinishedDate - datetime.datetime.now()).total_seconds()
+		printSecondsRemaning = math.ceil((PrintFinishedDate - datetime.datetime.now()).total_seconds())
 	
 	return printSecondsRemaning
 
@@ -42,6 +43,7 @@ class WebSocketHandler (tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         if (message == BEGIN_PRINT_COMMAND):
+        	SetPrintFinishedDate(80)
         	printSecondsRemaningString = str(GetPrintSecondsRemaning())
         	
         	self.write_message(PRINT_BEGUN_RESPONSE + ":" + printSecondsRemaningString)
@@ -52,10 +54,6 @@ class WebSocketHandler (tornado.websocket.WebSocketHandler):
 class UploadHandler (tornado.web.RequestHandler):
 	def post(self):
 		print('PRINT FILE RECIEVED\n')
-
-		SetPrintFinishedDate(30000)
-
-		print(GetPrintSecondsRemaning())
 
 		fileinfo = self.request.files['print-file'][0]
 		fname = fileinfo['filename']

@@ -804,7 +804,7 @@
         animation: "smooth",
         count_past_zero: false,
         circle_bg_color: "#60686F",
-        use_background: true,
+        use_background: false,
         fg_width: 0.1,
         bg_width: 1.2,
         text_size: 0.07,
@@ -814,7 +814,7 @@
         start_angle: 0,
         time: {
             Days: {
-                show: true,
+                show: false,
                 text: "Days",
                 color: "#FC6"
             },

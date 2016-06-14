@@ -1,3 +1,16 @@
+var BEGIN_PRINT_COMMAND = "PRINT";
+
+var PRINT_BEGUN_RESPONSE = "BEGUN._TIME_REMANING";
+var PRINT_FINISHED_RESPONSE = "FINISHED";
+var PRINT_ERROR_RESPONSE = "ERROR";
+
+var Socket = null;
+
+var LargestDisplayedTimeUnit = "Hours";
+
+var PrintCountdownCreated = false;
+var PrintCountdownListenerAdded = false;
+
 var ERROR_PHRASE_LIST = [
 	"Errrr...",
 	"Oops!",
@@ -7,14 +20,6 @@ var ERROR_PHRASE_LIST = [
 	"I haz error!",
 	"Well this is embarrassing"
 ];
-
-var BEGIN_PRINT_COMMAND = "PRINT";
-
-var PRINT_BEGUN_RESPONSE = "BEGUN._TIME_REMANING";
-var PRINT_FINISHED_RESPONSE = "FINISHED";
-var PRINT_ERROR_RESPONSE = "ERROR";
-
-var Socket = null;
 
 function SendNotification (message) {
 	var notification = new Notification('Lava Printer', { 
@@ -35,32 +40,77 @@ function TransitionPage (oldPage, newPage) {
 	$(newPage).toggle("slide", {direction: "right"}, 700);
 }
 
+function UpdateTimeCircles (printSecondsRemaining) {
+	var printCountdown = $("#print-countdown");
+	
+	if (PrintCountdownCreated) {
+		printSecondsRemaining = printCountdown.TimeCircles().getTime();
+		
+		printCountdown.TimeCircles().destroy();
+	}
+	
+	else {
+		if (printSecondsRemaining == undefined) {
+			printSecondsRemaining = printCountdown.attr("data-timer");
+		}
+	}
+	
+	var updatedTimeCircles = { time: {
+		Hours: { color: "#CB4332" },
+		Minutes: { color: "#069059" },
+		Seconds: { color: "#F48F32" }
+	}};
+	
+    if (printSecondsRemaining < 3600)
+    {
+    	updatedTimeCircles.time.Hours.show = false;
+    	
+    	LargestDisplayedTimeUnit = "Minutes";
+    }
+    
+    if (printSecondsRemaining < 60)
+    {
+    	updatedTimeCircles.time.Minutes.show = false;
+    	
+    	LargestDisplayedTimeUnit = "Seconds";
+    }
+    
+    printCountdown.data('timer', parseInt(printSecondsRemaining));
+    
+    printCountdown.TimeCircles(updatedTimeCircles);
+    
+    PrintCountdownCreated = true;
+    
+	if (!PrintCountdownListenerAdded) {
+		printCountdown.TimeCircles().addListener(function (unit, value, total) {
+			if (unit == LargestDisplayedTimeUnit && value == 0) {
+				UpdateTimeCircles();
+			}
+			
+			if (unit == "Seconds") {
+				var message = 'Print finished!';
+			
+				SendNotification(message);
+			
+				TransitionPage('#print-page', '#finished-page');
+			}
+		});
+		
+		PrintCountdownListenerAdded = true;
+	}
+}
+
 function ConnectToSocket (oldPage, newPage) {
 	var host = "ws://" + location.host + "/websocket"
 	
 	Socket = new WebSocket(host);
-
-	Socket.onopen = function() {
-		alert("open");
-	}
 
 	Socket.onmessage = function(message) {
 		responseID = message.data.split(":").shift();
 		responseContent = message.data.split(":").pop();
 		
 		if (responseID == PRINT_BEGUN_RESPONSE) {
-			$("#print-countdown").attr("data-timer", responseContent);
-			
-			$("#print-countdown").TimeCircles({
-			time: {
-				Days: { show: false },
-				Hours: { color: "#CB4332" },
-				Minutes: { color: "#069059" },
-				Seconds: { color: "#F48F32" }
-			},
-	
-			use_background: false
-		});
+			UpdateTimeCircles(responseContent);
 			
 			TransitionPage('#start-page', '#print-page');
 		}
@@ -70,16 +120,12 @@ function ConnectToSocket (oldPage, newPage) {
 			
 			SendNotification(message);
 			
-			transitionPage('#print-page', '#finished-page');
+			TransitionPage('#print-page', '#finished-page');
 		}
 		
 		if (responseID == PRINT_ERROR_RESPONSE) {
 			ShowError(responseContent);
 		}
-	}
-
-	Socket.onclose = function() {
-		alert("closed");
 	}
 }
 
@@ -129,7 +175,7 @@ $(function() {
 	});
 	
 	$("#restart-button").click(function() {
-		 location.reload(true);
+		location.reload(true);
 	});
 	
 	if (("WebSocket" in window)) {
@@ -139,7 +185,9 @@ $(function() {
 			$("#start-page").show();
 		}
 	
-		else {		
+		else {
+			UpdateTimeCircles();
+			
 			$("#print-page").show();
 		}
 	}
