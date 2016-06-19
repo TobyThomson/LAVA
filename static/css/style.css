@@ -1,77 +1,160 @@
-@font-face {
-    font-family: LatoLight;
-    src: url(fonts/Lato-Light.ttf);
-}
-
-* {
-	font-size: 100%;
-	font-family: LatoLight;
-	color: white;
-	font-weight: 10;
-}
-
-html, body {
-	width: 100%;
-	height: 100%;
-}
-
-.vertical-center {
-	min-height: 100%;
-	min-height: 100vh;
-	width: 100%;
-
-	display: flex;
-	align-items: center;
-}
-
-
 .page-container {
-	width: 100%;
-	height: 100%;
-	position: relative;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 
 .page {
-	width: 100%;
-	height: 100%;
-	
-	position: absolute;
-	
-	text-align: center;
+  width: 100%;
+  height: 100%;
 
-	display: none;
-	
-	float:left;
+  position: absolute;
+
+  text-align: center;
+
+  display: none;
+
+  float:left;
 }
 
-.wide-element {
-	margin-top: 20px;
-	
-	width: 60vw;
+.vertical-center {
+  min-height: 100%;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.btn {
+    padding: 14px 24px;
+    border: 0 none;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius:0;
+    margin-top: 10px;
+}
+
+.btn:focus, .btn:active:focus, .btn.active:focus {
+    outline: 0 none;
+}
+
+.btn-blue {
+    background: #0099cc;
+    color: #ffffff;
+}
+
+.btn-blue:hover, .btn-blue:focus, .btn-blue:active, .btn-blue.active, .open > .dropdown-toggle.btn-blue {
+    background: #33a6cc;
+    color: #ffffff;
+}
+
+.btn-blue:active, .btn-blue.active {
+    background: #007299;
+    box-shadow: none;
+}
+
+.btn-orange {
+    background: #F48F32;
+    color: #ffffff;
+}
+
+.btn-orange:hover, .btn-orange:focus, .btn-orange:active, .btn-orange.active, .open > .dropdown-toggle.btn-orange {
+    background: #ff9532;
+    color: #ffffff;
+}
+
+.btn-orange:active, .btn-orange.active {
+    background: #ce7929;
+    box-shadow: none;
+}
+
+.btn-green {
+    background: #00ad7c;
+    color: #ffffff;
+}
+
+.btn-green:hover, .btn-green:focus, .btn-green:active, .btn-green.active, .open > .dropdown-toggle.btn-green {
+    background: #00b783;
+    color: #ffffff;
+}
+
+.btn-green:active, .btn-green.active {
+    background: #008760;
+    box-shadow: none;
 }
 
 #upload-button {
-	position: relative;
-	overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
 
 #upload-button input {
-	position: absolute;
-	top: 0;
-	right: 0;
-	margin: 0;
-	padding: 0;
-	cursor: pointer;
-	opacity: 0;
-	width:100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  width:100%;
 }
 
 #upload-progress-bar {
-	height: 36px;
-	
-	display: none;
+  border-radius: 0;
+  height: 36px;
+  box-shadow: none;
+
+  display: none;
 }
 
-#print-button {
-	display: none;
+#layer-number-input {
+  text-align: center;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 18px;
+  height: 36px;
+  border: 0px none;
+  width: 100%;
+}
+
+#svg-canvas {
+  width:100%;
+  margin-top: 10px;
+}
+
+svg {
+  margin: auto;
+  display: block;
+}
+
+#print-countdown-overtime-message {
+  font-weight: 700;
+  font-size: 6vw;
+  letter-spacing: 1px;
+  color: #00ad7c;
+  text-transform: uppercase;
+  display: none;
+}
+
+#finished-title {
+  font-weight: 700;
+  font-size: 14vw;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.print-countdown-value {
+  color: #31393C;
+  font-weight: 700;
+  font-size: 8vw;
+  letter-spacing: 1px;
+}
+
+.print-countdown-divider {
+  color: #F48F32;
+  font-weight: 700;
+  font-size: 9vw;
+  letter-spacing: 1px;
 }

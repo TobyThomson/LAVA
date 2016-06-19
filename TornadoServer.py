@@ -7,35 +7,44 @@ import os
 import datetime
 import uuid
 import math
+import threading
+import time
 
-PrintFinishedDate = None
+PrintFinishedDate = "None"
 
 #Command IDs
 BEGIN_PRINT_COMMAND = "PRINT"
 
 #Response IDs
-PRINT_BEGUN_RESPONSE = "BEGUN._TIME_REMANING";
+PRINT_BEGUN_RESPONSE = "BEGUN._FINISHED_DATE";
 PRINT_FINISHED_RESPONSE = "FINISHED";
 PRINT_ERROR_RESPONSE = "ERROR";
 
-def GetPrintSecondsRemaning ():
+def test (sendMessage):
+	time.sleep(15)
 	global PrintFinishedDate
-	
-	printSecondsRemaning = None	
-	
-	if(PrintFinishedDate):
-		printSecondsRemaning = math.ceil((PrintFinishedDate - datetime.datetime.now()).total_seconds())
-	
-	return printSecondsRemaning
+	PrintFinishedDate = None
+	sendMessage(PRINT_FINISHED_RESPONSE)
+
+def GetPrintFinishedDate ():
+	global PrintFinishedDate
+
+	try:
+		printFinishedDateString = PrintFinishedDate.strftime("%Y-%m-%d %H:%M:%S")
+
+	except:
+		printFinishedDateString = "None"
+
+	return printFinishedDateString
 
 def SetPrintFinishedDate (estimatedPrintSeconds):
 	global PrintFinishedDate
-	
+
 	PrintFinishedDate = (datetime.datetime.now() + datetime.timedelta(seconds = estimatedPrintSeconds))
 
 class MainHandler (tornado.web.RequestHandler):
     def get(self):
-        self.render("index.html", printSecondsRemaining = GetPrintSecondsRemaning())
+        self.render("index.html", printSecondsRemaining = GetPrintFinishedDate())
 
 class WebSocketHandler (tornado.websocket.WebSocketHandler):
     def open(self):
@@ -43,10 +52,11 @@ class WebSocketHandler (tornado.websocket.WebSocketHandler):
 
     def on_message(self, message):
         if (message == BEGIN_PRINT_COMMAND):
-        	SetPrintFinishedDate(80)
-        	printSecondsRemaningString = str(GetPrintSecondsRemaning())
-        	
-        	self.write_message(PRINT_BEGUN_RESPONSE + ":" + printSecondsRemaningString)
+			SetPrintFinishedDate(10)
+			printThread = threading.Thread(name = 'Print Thread', target = test, args = (self.write_message, ))
+			printThread.start()
+
+			self.write_message(PRINT_BEGUN_RESPONSE + "***" + GetPrintFinishedDate())
 
     def on_close(self):
         print("***** WEBSOCKET CLOSED *****")
@@ -68,10 +78,10 @@ application = tornado.web.Application([
 	(r'/', MainHandler),
 	(r'/websocket', WebSocketHandler),
 	(r'/upload', UploadHandler) ],
-    
+
     template_path=os.path.join(os.path.dirname(__file__), "templates"),
     static_path=os.path.join(os.path.dirname(__file__), "static"),
-    
+
     debug=True)
 
 if __name__ == "__main__":
