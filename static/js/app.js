@@ -28,17 +28,15 @@ var maximumSVGLayerNumber = null;
 var LayerButtonTimeout = null;
 
 function SendNotification (message) {
-	var notification = new Notification('Lava Printer', {
-		body: message
-	});
-};
+	if ($.browser.mobile) {
+		swal(message)
+	}
 
-function ShowError (errorMessage) {
-	var errorPhraseNum = Math.floor(Math.random() * 7);
-
-	var message = ERROR_PHRASE_LIST[errorPhraseNum] + '\n' + errorMessage;
-
-	SendNotification(message);
+	else {
+		var notification = new Notification('Lava Printer', {
+			body: message
+		});
+	}
 };
 
 function TransitionPage (oldPage, newPage) {
@@ -188,10 +186,6 @@ $(document).keydown(function(e) {
 $(function() {
 	if(window.Notification && Notification.permission !== "denied") {
 		Notification.requestPermission();
-	}
-
-	window.onerror = function(errorMessage, url, lineNumber) {
-		ShowError(errorMessage.split(": ").pop());
 	}
 
 	$("#upload-button-file").change(function(event) {
