@@ -197,17 +197,23 @@ $(function() {
 
         reader.readAsText(file);
         reader.onload = function(e) {
-						SVGFile = $.parseXML(e.target.result);
+						try {
+							SVGFile = $.parseXML(e.target.result);
 
-						SVGLayers = SVGFile.getElementsByTagName('g');
+							SVGLayers = SVGFile.getElementsByTagName('g');
 
-						maximumSVGLayerNumber = SVGLayers.length - 1;
+							maximumSVGLayerNumber = SVGLayers.length - 1;
 
-						changeSVGLayer();
+							changeSVGLayer();
+
+							$("#upload-form").submit();
+						}
+
+						catch (error){
+							SendNotification("Please upload a valid SVG file");
+						}
         };
     }
-
-		$("#upload-form").submit();
 	});
 
 

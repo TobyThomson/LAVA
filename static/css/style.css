@@ -106,7 +106,7 @@ body {
 
 #upload-progress-bar {
   border-radius: 0;
-  height: 36px;
+  height: 48px;
   box-shadow: none;
 
   display: none;
@@ -118,9 +118,10 @@ body {
   text-transform: uppercase;
   font-weight: 700;
   font-size: 18px;
-  height: 36px;
+  height: 48px;
   border: 0px none;
   width: 100%;
+  margin-top: 10px;
 }
 
 #svg-canvas {
