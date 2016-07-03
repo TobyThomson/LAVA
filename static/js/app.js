@@ -33,8 +33,9 @@ function SendNotification (message) {
 	}
 
 	else {
-		var notification = new Notification('Lava Printer', {
-			body: message
+		var notification = new Notification('LAVA', {
+			body: message,
+			icon: "static/images/android-icon-96x96.png"
 		});
 	}
 };
