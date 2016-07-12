@@ -35,7 +35,8 @@ function SendNotification (message) {
 	else {
 		var notification = new Notification('LAVA', {
 			body: message,
-			icon: "static/images/android-icon-96x96.png"
+			icon: "static/images/favicon-32x32.png",
+			iconUrl: "static/images/favicon-32x32.png"
 		});
 	}
 };

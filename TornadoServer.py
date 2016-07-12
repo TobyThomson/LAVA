@@ -3,14 +3,24 @@ import tornado.httpserver
 import tornado.ioloop
 import tornado.web
 import tornado.websocket
+
 import os
 import datetime
-import uuid
-import math
 import threading
-import time
+from time import sleep
 
-PrintFinishedDate = "None"
+from Printer import Printer
+
+#Configuration
+STEPPER_DIRECTION_PIN = 1
+STEPPER_STEP_PIN = 1
+PROJECTOR_RESOLUTION = (800, 480)
+AP_PASSWORD = 'abc123'
+RESIN_CURE_TIME = 1
+LAYER_HEIGHT = 1
+THREADS_PER_INCH = 1
+
+PrintFinishedDate = None
 
 #Command IDs
 BEGIN_PRINT_COMMAND = "PRINT"
@@ -20,13 +30,19 @@ PRINT_BEGUN_RESPONSE = "BEGUN._FINISHED_DATE";
 PRINT_FINISHED_RESPONSE = "FINISHED";
 PRINT_ERROR_RESPONSE = "ERROR";
 
-def test (sendMessage):
-	time.sleep(15)
-	global PrintFinishedDate
-	PrintFinishedDate = None
-	sendMessage(PRINT_FINISHED_RESPONSE)
+def SetPrintFile (printFile):
+	printFile = open('uploads/PrintFile.svg', 'w')
 
-def GetPrintFinishedDate ():
+	f.write(printFile)
+
+def GetPrintFile ():
+	printFile = open('uploads/PrintFile.svg', 'r')
+
+	printFileContents = printFile.read()
+
+	return printFileContents
+
+def GetEstimatedPrintFinishedDate ():
 	global PrintFinishedDate
 
 	try:
@@ -37,7 +53,7 @@ def GetPrintFinishedDate ():
 
 	return printFinishedDateString
 
-def SetPrintFinishedDate (estimatedPrintSeconds):
+def SetEstimatedPrintFinishedDate (estimatedPrintSeconds):
 	global PrintFinishedDate
 
 	PrintFinishedDate = (datetime.datetime.now() + datetime.timedelta(seconds = estimatedPrintSeconds))
@@ -48,31 +64,28 @@ class MainHandler (tornado.web.RequestHandler):
 
 class WebSocketHandler (tornado.websocket.WebSocketHandler):
     def open(self):
-        print("***** WEBSOCKET OPENED *****")
+        pass
 
     def on_message(self, message):
-        if (message == BEGIN_PRINT_COMMAND):
-			SetPrintFinishedDate(10)
-			printThread = threading.Thread(name = 'Print Thread', target = test, args = (self.write_message, ))
-			printThread.start()
+        if (message == BEGIN_PRINT_COMMAND and GetPrintFile != None):
+			LAVAPrinter.SetPrintFile(GetPrintFile())
+
+			SetEstimatedPrintFinishedDate(LAVAPrinter.GetEstimatedPrintSeconds())
+
+			self.PrintThread = threading.Thread(name = 'Print Thread', target = LAVAPrinter.Print(), args = (self.write_message, ))
+			self.PrintThread.start()
 
 			self.write_message(PRINT_BEGUN_RESPONSE + "***" + GetPrintFinishedDate())
 
     def on_close(self):
-        print("***** WEBSOCKET CLOSED *****")
+        pass
 
 class UploadHandler (tornado.web.RequestHandler):
 	def post(self):
-		print('PRINT FILE RECIEVED\n')
-
 		fileinfo = self.request.files['print-file'][0]
-		fname = fileinfo['filename']
-		extn = os.path.splitext(fname)[1]
-		cname = str(uuid.uuid4()) + extn
+		printFile = fileinfo['body']
 
-		f = open('uploads/' + cname, 'w+')
-
-		f.write(fileinfo['body'])
+		SetPrintFile(printFile)
 
 application = tornado.web.Application([
 	(r'/', MainHandler),
@@ -85,6 +98,10 @@ application = tornado.web.Application([
     debug=True)
 
 if __name__ == "__main__":
+	LAVAPrinter = Printer(STEPPER_DIRECTION_PIN, STEPPER_STEP_PIN, PROJECTOR_RESOLUTION, AP_PASSWORD, RESIN_CURE_TIME, LAYER_HEIGHT, THREADS_PER_INCH)
+	LAVAPrinter.DisplayAPPassword()
+	sleep(5)
+	LAVAPrinter = None
 	http_server = tornado.httpserver.HTTPServer(application)
 	http_server.listen(8888)
 	tornado.ioloop.IOLoop.instance().start()
