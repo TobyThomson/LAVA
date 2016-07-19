@@ -16,9 +16,9 @@ STEPPER_DIRECTION_PIN = 1
 STEPPER_STEP_PIN = 1
 PROJECTOR_RESOLUTION = (800, 480)
 AP_PASSWORD = 'LAVAabcxyz'
-RESIN_CURE_TIME = 1
-LAYER_HEIGHT = 0.1
-THREADS_PER_INCH = 1
+RESIN_CURE_TIME = 0.1
+LAYER_HEIGHT = 0.001
+THREADS_PER_INCH = 80
 
 #MISC
 PrintFinishedDate = "None"
@@ -31,15 +31,11 @@ PRINT_BEGUN_RESPONSE = "BEGUN._FINISHED_DATE";
 PRINT_FINISHED_RESPONSE = "FINISHED";
 PRINT_ERROR_RESPONSE = "ERROR";
 
-def SetPrintFile (printFile):
-	printFileLocation = open('uploads/PrintFile.svg', 'w')
 
-	printFileLocation.write(printFile)
+def ResetDate ():
+	global PrintFinishedDate
 
-def GetPrintFile ():
-	printFile = open('uploads/PrintFile.svg', 'r')
-
-	return printFile
+	PrintFinishedDate = "None"
 
 def GetEstimatedPrintFinishedDate ():
 	global PrintFinishedDate
@@ -63,8 +59,10 @@ class MainHandler (tornado.web.RequestHandler):
 
 class WebSocketHandler (tornado.websocket.WebSocketHandler):
     def on_message(self, message):
-        if (message == BEGIN_PRINT_COMMAND and GetPrintFile != None):
-			self.PrintThread = threading.Thread(name = 'Print Thread', target = LAVAPrinter.Print)
+		printFile = open('uploads/PrintFile.svg', 'r')
+
+		if (message == BEGIN_PRINT_COMMAND and printFile != None):
+			self.PrintThread = threading.Thread(name = 'Print Thread', target = LAVAPrinter.Print, args = (self.write_message, PRINT_FINISHED_RESPONSE, ResetDate))
 			self.PrintThread.start()
 
 			self.write_message(PRINT_BEGUN_RESPONSE + "***" + GetEstimatedPrintFinishedDate())

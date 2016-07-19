@@ -29,14 +29,14 @@ class Printer:
 		self.ThreadsPerInch = threadsPerInch
 		self.LayerHeight = layerHeight
 
-		#GPIO.setmode(GPIO.BCM)
+		GPIO.setmode(GPIO.BCM)
 
-		#GPIO.setup(self.StepperDirectionPin, GPIO.OUT)
-		#GPIO.setup(self.StepperStepPin, GPIO.OUT)
+		GPIO.setup(self.StepperDirectionPin, GPIO.OUT)
+		GPIO.setup(self.StepperStepPin, GPIO.OUT)
 
 		pygame.init()
 
-		self.Screen = pygame.display.set_mode(self.ProjectorResolution)#, pygame.FULLSCREEN)
+		self.Screen = pygame.display.set_mode(self.ProjectorResolution, pygame.FULLSCREEN)
 
 		self.Data = numpy.empty(self.ProjectorResolution[0] * self.ProjectorResolution[1] * 4, dtype=numpy.int8)
 
@@ -45,12 +45,12 @@ class Printer:
 
 		pygame.mouse.set_visible(False);
 
-		#self.ProjectorHandler = Popen(['am7xxx-play', '-f', 'x11grab', '-i', ':0.0', '-o', 'video_size=800x480'])
+		self.ProjectorHandler = Popen(['am7xxx-play', '-f', 'x11grab', '-i', ':0.0', '-o', 'video_size=800x480'])
 
 		self.Layers = {}
 
 	def __del__ (self):
-		#self.ProjectorHandler.terminate()
+		self.ProjectorHandler.terminate()
 
 		pygame.quit()
 
@@ -75,19 +75,16 @@ class Printer:
 
 	def MoveBed (self, distance):
 		if distance > 0:
-		    #GPIO.output(self.StepperDirectionPin, False)
-			print('step up')
+		    GPIO.output(self.StepperDirectionPin, False)
 
 		elif distance < 0:
-		    #GPIO.output(self.StepperDirectionPin, True)
-			print('step back')
+		    GPIO.output(self.StepperDirectionPin, True)
 
-		for i in range(0, int(((360 * (self.ThreadsPerInch / 25.4)) / 200) * math.fabs(distance))):
-		    #GPIO.output(self.StepperStepPin, True)
-		    #sleep(0.01)
-		    #GPIO.output(self.StepperStepPin, False)
-		    #sleep(0.01)
-			print(i)
+		for i in range(0, int((200 * (self.ThreadsPerInch / 25.4)) * self.LayerHeight)):
+		    GPIO.output(self.StepperStepPin, True)
+		    sleep(0.01)
+		    GPIO.output(self.StepperStepPin, False)
+		    sleep(0.01)
 
 	def SetPrintFile (self, printFile):
 		self.PrintFile = printFile
@@ -95,8 +92,6 @@ class Printer:
 		self.Screen.fill(Black)
 
 		pygame.display.flip()
-		
-		print('hmmmm')
 
 		tree = etree.parse(printFile)
 
@@ -110,12 +105,15 @@ class Printer:
 				self.Layers[name].append(etree.tostring(el, with_tail = False))
 
 	def GetEstimatedPrintSeconds (self):
-		layerTime = (float(((360 * (self.ThreadsPerInch / 25.4)) / 200) * self.LayerHeight)) + self.ResinCureTime
-		estimatedPrintTime = layerTime * len(self.Layers)
+		threadsPerMillimeter = self.ThreadsPerInch / 25.4
+		stepsPerLayer = (200 * threadsPerMillimeter) * self.LayerHeight
+		layerTime = (stepsPerLayer * (0.01 * 2))
+		repositionTime = (5 * layerTime) + (4 * layerTime)
+		totalTime = (layerTime + repositionTime) * len(self.Layers)
 
-		return estimatedPrintTime
+		return totalTime
 
-	def Print (self):
+	def Print (self, sendMessage, printFinishedCommand, resetDate):
 		self.Screen.fill(Black)
 
 		for i in range(0, len(self.Layers)):
@@ -136,5 +134,11 @@ class Printer:
 
 			self.Screen.fill(Black)
 
+			pygame.display.flip()
+
 			self.MoveBed(5 * self.LayerHeight)
 			self.MoveBed(-1 * (4 * self.LayerHeight))
+
+		sendMessage(printFinishedCommand)
+
+		resetDate()
