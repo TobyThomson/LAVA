@@ -35,8 +35,7 @@ function SendNotification (message) {
 	else {
 		var notification = new Notification('LAVA', {
 			body: message,
-			icon: "static/images/favicon-32x32.png",
-			iconUrl: "static/images/favicon-32x32.png"
+			iconUrl: "/static/images/android-icon-36x36.png"
 		});
 	}
 };
@@ -102,6 +101,8 @@ function ConnectToSocket (oldPage, newPage) {
 		responseID = message.data.split("***").shift();
 		responseContent = message.data.split("***").pop();
 
+		console.log(message);
+
 		if (responseID == PRINT_BEGUN_RESPONSE) {
 			InitializeCountdown(responseContent);
 
@@ -160,7 +161,7 @@ function changeSVGLayer() {
 function updateCurrentSVGLayerNumber (value) {
 	if (SVGLayers) {
 		currentSVGLayerNumber = value;
-		console.log(currentSVGLayerNumber);
+
 		if (value > maximumSVGLayerNumber) {
 			currentSVGLayerNumber = maximumSVGLayerNumber;
 		}
@@ -198,26 +199,26 @@ $(function() {
         var reader = new FileReader();
 
         reader.readAsText(file);
+
         reader.onload = function(e) {
-						try {
-							SVGFile = $.parseXML(e.target.result);
+			try {
+				SVGFile = $.parseXML(e.target.result);
 
-							SVGLayers = SVGFile.getElementsByTagName('g');
+				SVGLayers = SVGFile.getElementsByTagName('g');
 
-							maximumSVGLayerNumber = SVGLayers.length - 1;
+				maximumSVGLayerNumber = SVGLayers.length - 1;
 
-							changeSVGLayer();
+				changeSVGLayer();
 
-							$("#upload-form").submit();
-						}
+				$("#upload-form").submit();
+			}
 
-						catch (error){
-							SendNotification("Please upload a valid SVG file");
-						}
+			catch (error){
+				SendNotification("Please upload a valid SVG file");
+			}
         };
     }
 	});
-
 
 	$("form").ajaxForm({
 		beforeSend: function() {
@@ -236,7 +237,7 @@ $(function() {
 			$('#upload-progress-bar-fill').width(percentVal);
 		},
 		complete: function(response) {
-			var message = "Print file finished uploading";
+			var message = "Upload finished. Please prepare the printer";
 
 			SendNotification(message);
 
