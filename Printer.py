@@ -12,6 +12,8 @@ from lxml import etree
 
 import math
 
+import RPi.GPIO as GPIO
+
 Black = (0, 0, 0)
 White = (255, 255, 255)
 

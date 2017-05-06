@@ -1,0 +1,3 @@
+sleep 1m
+
+sudo python /home/pi/LAVA/TornadoServer.py 
